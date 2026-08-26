@@ -1,5 +1,7 @@
 # pi-post
 
+<p align="center"><img src="demons-hero.gif" alt="pi-post" width="100%" /></p>
+
 Messages between [Pi](https://pi.dev) sessions — **delivered mid-task,
 or queued until they return**. Send briefs, findings, and handoffs
 between sessions and processes, straight into the receiving agent's
@@ -224,6 +226,10 @@ bin/
   pi-post.mjs  standalone CLI (plain JS; the wire contract, duplicated
                deliberately and pinned by test/cli.test.ts)
 ```
+
+## Credits
+
+Animation by [Jon Romero Ruiz](https://x.com/jonroru).
 
 ## License
 
