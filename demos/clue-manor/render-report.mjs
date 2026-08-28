@@ -145,12 +145,7 @@ const timelineItems = chunks.join("\n");
 
 // -- Cast -----------------------------------------------------------------
 const castRows = manifest
-  .map(
-    (m) =>
-      `  <tr><td class="name n-${roleOf(m.name)}">${esc(m.name)}</td><td><code>${esc(m.window)}</code></td><td><code>${esc(
-        m.pane
-      )}</code></td></tr>`
-  )
+  .map((m) => `  <tr><td class="name n-${roleOf(m.name)}">${esc(m.name)}</td><td><code>${esc(m.window)}</code></td></tr>`)
   .join("\n");
 
 const runName = runDir.replace(/\/+$/, "").split("/").pop();
@@ -256,8 +251,8 @@ const html = `<!DOCTYPE html>
 
 <h2>The Cast</h2>
 <table>
-  <tr><th>Session</th><th>Window</th><th>Pane</th></tr>
-${castRows || '  <tr><td colspan="3">No manifest found.</td></tr>'}
+  <tr><th>Session</th><th>Window</th></tr>
+${castRows || '  <tr><td colspan="2">No manifest found.</td></tr>'}
 </table>
 
 <h2>Delivery Statistics</h2>
