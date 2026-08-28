@@ -13,7 +13,11 @@
 // Event schema:
 //   { ts: ISO-8601, kind: "message"|"milestone", type?: string,
 //     from: string, to: string, status: "delivered"|"queued"|"n/a",
-//     text: string }
+//     text: string, quote?: string }
+//
+// `quote` is an optional verbatim excerpt (the strongest one or two
+// sentences of the actual message); it renders as a pull-quote with
+// `text` as the caption beneath.
 //
 // Recognized type values get emphasis: accuse, confess, verdict,
 // gameover, summon, retire, dawn, whisper, queued, resume.
@@ -94,20 +98,50 @@ const verdictText = verdictEv?.text ?? overEv?.text ?? "The case remains open. T
 
 // -- Timeline -------------------------------------------------------------
 const EMPHASIS = new Set(["accuse", "confess", "verdict", "gameover", "summon", "retire", "dawn", "queued", "resume"]);
-const timelineItems = events
-  .map((e) => {
-    const role = roleOf(e.from);
-    const type = (e.type ?? "").toLowerCase();
-    const emphatic = e.kind === "milestone" || EMPHASIS.has(type);
-    const cls = [`from-${role}`, emphatic ? "milestone" : ""].filter(Boolean).join(" ");
-    const arrow = e.kind === "message" ? ` &rarr; ${esc(e.to)}` : "";
-    const status = e.status && e.status !== "n/a" ? ` &middot; ${esc(e.status)}` : "";
-    const tag = type ? ` &middot; ${esc(type.toUpperCase())}` : "";
-    return `  <li class="${cls}"><div class="meta">${hhmm(e.ts)} &middot; <span class="name n-${role}">${esc(
+
+// Acts: forward-only chapter headers derived from event types. An event
+// whose trigger maps to an earlier act never regresses the narrative.
+const ACTS = [
+  { title: "The Summoning", types: ["summon"] },
+  { title: "The Investigation", types: ["q", "clue", "relay", "reveal"] },
+  { title: "The Whisper Hour", types: ["whisper"] },
+  { title: "The Night", types: ["retire", "goodnight", "queued", "resume"] },
+  { title: "Dawn", types: ["dawn"] },
+  { title: "The Accusations", types: ["accuse"] },
+  { title: "The Verdict", types: ["verdict"] },
+  { title: "Epilogue", types: ["confess", "farewell", "gameover"] },
+];
+const actIndex = (type) => ACTS.findIndex((a) => a.types.includes(type));
+
+let currentAct = -1;
+const chunks = [];
+for (const e of events) {
+  const role = roleOf(e.from);
+  const type = (e.type ?? "").toLowerCase();
+  const target = actIndex(type);
+  if (target > currentAct) {
+    if (currentAct >= 0) chunks.push("</ol>");
+    chunks.push(`<h3 class="act">${esc(ACTS[target].title)}</h3>`, '<ol class="timeline">');
+    currentAct = target;
+  } else if (currentAct === -1) {
+    chunks.push('<ol class="timeline">');
+    currentAct = 0;
+  }
+  const emphatic = e.kind === "milestone" || EMPHASIS.has(type);
+  const cls = [`from-${role}`, emphatic ? "milestone" : ""].filter(Boolean).join(" ");
+  const arrow = e.kind === "message" ? ` &rarr; ${esc(e.to)}` : "";
+  const status = e.status && e.status !== "n/a" ? ` &middot; ${esc(e.status)}` : "";
+  const tag = type ? ` &middot; ${esc(type.toUpperCase())}` : "";
+  const quote = e.quote ? `<blockquote>${esc(e.quote)}</blockquote>` : "";
+  const body = e.quote ? `<div class="caption">${esc(e.text)}</div>` : esc(e.text);
+  chunks.push(
+    `  <li class="${cls}"><div class="meta">${hhmm(e.ts)} &middot; <span class="name n-${role}">${esc(
       e.from
-    )}</span>${arrow}${status}${tag}</div>${esc(e.text)}</li>`;
-  })
-  .join("\n");
+    )}</span>${arrow}${status}${tag}</div>${quote}${body}</li>`
+  );
+}
+if (currentAct >= 0 || events.length) chunks.push("</ol>");
+const timelineItems = chunks.join("\n");
 
 // -- Cast -----------------------------------------------------------------
 const castRows = manifest
@@ -174,6 +208,18 @@ const html = `<!DOCTYPE html>
     font-variant-numeric: tabular-nums; margin-bottom: .3rem; letter-spacing: .01em;
   }
   .timeline .milestone { border-left-color: var(--blood); background: #241a17; }
+  .act {
+    font-variant: small-caps; letter-spacing: .14em; color: var(--dim); font-weight: 600;
+    font-size: .95rem; text-align: center; margin: 2.2rem 0 .9rem; text-wrap: balance;
+  }
+  .act::before, .act::after { content: "\\2014"; color: var(--line); margin: 0 .6em; }
+  .timeline blockquote {
+    margin: .1rem 0 .45rem; padding: 0; border: 0; font-style: italic;
+    font-size: 1.02rem; line-height: 1.55; color: var(--ink); text-wrap: pretty;
+  }
+  .timeline blockquote::before { content: "\\201C"; color: var(--gold); }
+  .timeline blockquote::after { content: "\\201D"; color: var(--gold); }
+  .timeline .caption { font-size: .85rem; color: var(--dim); text-wrap: pretty; }
   .from-ghost { border-left-color: var(--ghost); }
   .from-scarlett { border-left-color: var(--scarlett); }
   .from-mustard { border-left-color: var(--mustard); }
@@ -225,9 +271,7 @@ ${castRows || '  <tr><td colspan="3">No manifest found.</td></tr>'}
 </div>
 
 <h2>Timeline of Events</h2>
-<ol class="timeline">
 ${timelineItems}
-</ol>
 
 <h2>What pi-post Did</h2>
 <footer>

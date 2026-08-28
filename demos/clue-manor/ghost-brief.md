@@ -64,13 +64,29 @@ immediately after every message you send or receive and at every
 milestone. Schema (the renderer is strict about field names):
 
 ```json
-{"ts":"<ISO-8601>","kind":"message|milestone","type":"q|clue|relay|reveal|whisper|accuse|retire|goodnight|queued|resume|dawn|verdict|confess|farewell|gameover|summon","from":"ghost|miss-scarlett|...|human|process","to":"...","status":"delivered|queued|n/a","text":"..."}
+{"ts":"<ISO-8601>","kind":"message|milestone","type":"q|clue|relay|reveal|whisper|accuse|retire|goodnight|queued|resume|dawn|verdict|confess|farewell|gameover|summon","from":"ghost|miss-scarlett|...|human|process","to":"...","status":"delivered|queued|n/a","text":"...","quote":"optional verbatim excerpt"}
 ```
 
 Escape the text yourself; append with a quoted heredoc. Whispers travel
 suspect-to-suspect and you will not see their contents — log a whisper
 event when a suspect mentions having sent one (`"text":"whisper sent,
 content undisclosed"`).
+
+**Log prose rules — the report is only as good as these fields.**
+
+- `quote`: whenever a message has a line worth keeping, put its
+  strongest one or two sentences here VERBATIM. The renderer sets it as
+  a pull-quote; quotes carry the report's voice. Most suspect messages
+  deserve one; most ghost clues do not.
+- `text`: case-file prose — past tense, concrete nouns, the detail that
+  matters ("found the drawer already empty at 10:20"), one or two
+  sentences. Never phase bookkeeping ("round-2 clue", "+ announced"),
+  never envelope brackets — the `type` field already carries the
+  mechanics. When `quote` is present, `text` is its caption: say what
+  the moment did to the case, not what the message said.
+- The `verdict` event is the report's lede. Write it as one composed
+  narrative paragraph — who did it, how the case unraveled, the ironic
+  turn — not a ruling recap with parenthetical notes.
 
 ## Phase script
 
