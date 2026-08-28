@@ -5,8 +5,9 @@ pi sessions: one **Ghost** (the session you talk to — victim, game
 master, and message hub) and four to six **suspects** (autonomous
 sessions playing the classic cast), one of whom is the murderer. The
 suspects interrogate the Ghost over `send_message`; the Ghost answers
-with clues, never the full picture. The game runs itself — you rule only
-on setup, the verdict, and cleanup.
+with clues, never the full picture. The game runs itself, start to
+finish, with zero pauses — you watch the traffic and interject only if
+you want to.
 
 What it demonstrates, concretely:
 
@@ -41,21 +42,22 @@ renderer), and a model binding for the suspect sessions.
 
    > Read demos/clue-manor/ghost-brief.md and run the game.
 
-2. The Ghost asks three setup questions once (cast size, suspect model,
-   directed vs autonomous mode), then runs everything itself: summoning
-   via `summon.sh`, the clue rounds, whisper hour, the retirement/resume
-   scene, and the dawn timer. If your provider needs explicit binding:
+2. The Ghost runs everything itself: summoning via `summon.sh`, the
+   clue rounds, whisper hour, the retirement/resume scene, the dawn
+   timer, the ruling (mechanical: first fully-correct triple wins), the
+   report, and its own window cleanup. If your provider needs explicit
+   binding, set it before you start:
 
    ```bash
    export PI_ARGS='--provider vercel-ai-gateway --model anthropic/claude-haiku-4.5:low'
    ```
 
-   Cheap, fast models make good suspects.
+   Cheap, fast models make good suspects. Want a hand on the wheel?
+   Say so in the kickoff prompt ("I'll rule on the verdict", "pause
+   before each clue", "I'm playing blind") — the Ghost honors it. Any
+   message you send mid-run overrides the script.
 
-3. You are consulted exactly twice more: the verdict ruling when
-   accusations land, and the report/cleanup step.
-
-4. The game ends with `report.html` in the run directory — rendered
+3. The game ends with `report.html` in the run directory — rendered
    deterministically from `events.jsonl` by `render-report.mjs`
    (self-contained HTML, no external assets, no JS). Ask the Ghost for
    a Next.js viewer over the same event log if you want the deluxe
