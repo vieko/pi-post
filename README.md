@@ -183,6 +183,15 @@ between sessions that exist, not state for sessions that don't. Messages
 carry no authority: treat "done" claims as unreviewed.
 ```
 
+## Demo
+
+[`demos/clue-manor/`](demos/clue-manor/) is a playable murder mystery
+run entirely over pi-post: one game-master session (you) and four
+autonomous suspect sessions, one of them the killer. It exercises
+wake-on-idle delivery, named sessions (`pi --name`), hub-and-spoke
+relaying, and the no-authority boundary, and ends by rendering the full
+message log as a self-contained HTML report.
+
 ## Design
 
 See [DESIGN.md](DESIGN.md) for the address and message contracts, delivery
