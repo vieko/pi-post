@@ -143,6 +143,15 @@ suspects:
     Dawn. The well is drained: a brass candlestick, wax-capped, lies in
     the morning sun. Accusations are now heard.
 
+The dawn broadcast reveals ONLY the weapon — never suspect-identifying
+evidence (no flue contents, no room attributions, nothing that skips
+the synthesis step). Dawn gates the endgame; it must not solve the case
+for the table, or every accusation converges and the win collapses into
+message latency (observed in the first six-cast run: a broadcast that
+placed the revolver in a named suspect's room produced a unanimous
+board). Suspect-identifying finds stay in private clues to individual
+witnesses.
+
 **Phase 6 — accusations. PAUSE #2.** Collect accusations (one per
 suspect, refused before dawn). When they are in — or when the table has
 clearly converged — present the board to the human and ask for the
