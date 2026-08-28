@@ -260,7 +260,7 @@ ${castRows || '  <tr><td colspan="2">No manifest found.</td></tr>'}
   <div class="stat"><span class="num">${msgs.length}</span><span class="label">messages</span></div>
   <div class="stat"><span class="num">${ghostOut}</span><span class="label">ghost &rarr; guests</span></div>
   <div class="stat"><span class="num">${ghostIn}</span><span class="label">guests &rarr; ghost</span></div>
-  <div class="stat"><span class="num">${peer}</span><span class="label">whispers / process</span></div>
+  <div class="stat"><span class="num">${peer}</span><span class="label">whispers</span></div>
   <div class="stat"><span class="num">${delivered}</span><span class="label">delivered</span></div>
   <div class="stat"><span class="num">${queued}</span><span class="label">queued</span></div>
 </div>
