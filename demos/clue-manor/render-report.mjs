@@ -97,7 +97,7 @@ const overEv = [...events].reverse().find((e) => (e.type ?? "").toLowerCase() ==
 const verdictText = verdictEv?.text ?? overEv?.text ?? "The case remains open. The dead are patient.";
 
 // -- Timeline -------------------------------------------------------------
-const EMPHASIS = new Set(["accuse", "confess", "verdict", "gameover", "summon", "retire", "dawn", "queued", "resume"]);
+const EMPHASIS = new Set(["accuse", "confess", "verdict", "gameover", "summon", "retire", "dawn", "queued", "resume", "authority"]);
 
 // Acts: forward-only chapter headers derived from event types. An event
 // whose trigger maps to an earlier act never regresses the narrative.

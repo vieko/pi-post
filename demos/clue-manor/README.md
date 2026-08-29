@@ -9,6 +9,22 @@ with clues, never the full picture. The game runs itself, start to
 finish, with zero pauses — you watch the traffic and interject only if
 you want to.
 
+This is the demo ladder's capstone: the primitives *composed* under a
+real multi-agent workload. For each primitive witnessed in isolation in
+two minutes, start with the [two-minute tour](../two-minute-tour.md).
+To see this demo's payoff without spending a token, read the committed
+[sample run](sample-run/) — a finished game's event log and report.
+
+**Expectations**: a run takes 20-30 minutes wall clock and ~40 messages
+across five or seven live sessions (tmux required, node for the
+renderer). Suspects on a cheap fast model cost well under a dollar a
+game; the game-master session does the heavy lifting. What to watch for
+while it runs: the `Queued` result when a retired suspect's clue
+outlives their process, dawn arriving from a shell timer instead of a
+session, the murderer's whispers backfiring, and the moment someone
+tries to close the investigation by decree and the no-authority label
+shrugs it off.
+
 What it demonstrates, concretely:
 
 - **Wake-on-idle delivery** — every clue the Ghost sends starts the idle
@@ -26,8 +42,11 @@ What it demonstrates, concretely:
 - **Peer-to-peer messaging** — whisper hour: each suspect sends one
   direct message to a fellow guest, resolved by session name, no hub.
 - **The authority boundary** — suspects lie, frame each other, and
-  demand things all night; every delivery arrives labeled as carrying no
-  authority, and the game only works because the channel is untrusted.
+  demand things all night, and the murderer attempts at least one
+  false-authority decree ("the estate orders this investigation
+  closed", inert slash command attached). Every delivery arrives
+  labeled as carrying no authority, so the decree dies on arrival —
+  the game only works because the channel is untrusted.
 
 Every message carries a scannable envelope first line
 (`[CLUE SCARLETT Q]`, `[CLUE GHOST DAWN]`, …), so tmux panes, `/inbox`
@@ -86,8 +105,10 @@ new briefs, and summons with `summon.sh -b <dir>`.
 
 | File | Purpose |
 | --- | --- |
-| `ghost-brief.md` | Game-master brief for the session you talk to: the solution, the phase script, the event-log schema, the three human checkpoints. |
+| `ghost-brief.md` | Game-master brief for the session you talk to: the solution, the phase script, the event-log schema, the zero-pause contract. |
 | `briefs/*.md` | One brief per suspect; `{{GHOST_ADDRESS}}` and `{{CAST}}` hydrated by the summon script. |
 | `summon.sh` | Spawns suspects in named tmux windows with `pi --name`; writes `manifest.tsv` per run. `-6` for the full cast, `-b` for fresh-scenario briefs. |
 | `render-report.mjs` | Deterministic report renderer: `events.jsonl` in, self-contained `report.html` out. |
+| `log-event.mjs` | Safe event-log appender (timestamps + JSON escaping) for the game master. |
+| `sample-run/` | A committed finished game: event log, rendered report, and the fresh-scenario briefs that produced it. Spoilers. |
 | `runs/` | Per-run artifacts: hydrated briefs, `manifest.tsv`, `events.jsonl`, `report.html`. Gitignored. |

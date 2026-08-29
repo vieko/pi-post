@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Boddy Manor Affair — Case Report</title>
+<style>
+  :root {
+    --bg: #14100e; --panel: #1e1815; --line: #3a2f28; --ink: #d8cfc4;
+    --dim: #8a7d70; --gold: #c9a227; --blood: #a4423a;
+    --scarlett: #d4585a; --mustard: #c9a227; --peacock: #4a8fa8;
+    --plum: #9b6b9e; --green: #5e9c6f; --white: #b9b3ab;
+    --ghost: #7fa87f; --human: #b0a08c; --process: #7a8ba8; --other: #8a7d70;
+  }
+  * { box-sizing: border-box; }
+  html { font-size: 16px; }
+  body {
+    margin: 0; padding: 2rem 1.25rem 4rem; background: var(--bg); color: var(--ink);
+    font: 1.0625rem/1.65 Georgia, 'Times New Roman', serif;
+    text-rendering: optimizeLegibility; font-kerning: normal;
+  }
+  main { max-width: 70ch; margin: 0 auto; }
+  p, li { text-wrap: pretty; orphans: 3; widows: 3; hyphens: auto; hyphenate-limit-chars: 8 4 4; }
+  header { text-align: center; border-bottom: 3px double var(--line); padding-bottom: 1.5rem; margin-bottom: 2rem; }
+  h1 {
+    font-variant: small-caps; letter-spacing: .1em; margin: 0 0 .35rem; color: var(--gold);
+    font-size: clamp(1.7rem, 5vw, 2.3rem); line-height: 1.15; text-wrap: balance; font-weight: 600;
+  }
+  .subtitle { color: var(--dim); font-style: italic; font-size: .95rem; text-wrap: balance; }
+  .verdict {
+    background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--blood);
+    padding: 1rem 1.25rem; margin: 1.5rem 0; font-size: 1.05rem; line-height: 1.6; text-wrap: pretty;
+  }
+  .verdict::before { content: "Verdict"; display: block; font-variant: small-caps; letter-spacing: .12em; color: var(--blood); font-size: .8rem; margin-bottom: .35rem; }
+  h2 {
+    font-variant: small-caps; letter-spacing: .1em; color: var(--gold); font-weight: 600;
+    font-size: 1.2rem; line-height: 1.3; text-wrap: balance;
+    border-bottom: 1px solid var(--line); padding-bottom: .3rem; margin: 2.75rem 0 1rem;
+  }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .92rem; }
+  th, td { text-align: left; padding: .45rem .6rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--dim); font-weight: normal; font-variant: small-caps; letter-spacing: .08em; font-size: .82rem; }
+  code { font-family: 'SF Mono', Menlo, monospace; font-size: .82em; color: var(--dim); }
+  .timeline { list-style: none; padding: 0; margin: 0; }
+  .timeline li {
+    background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--other);
+    margin: .6rem 0; padding: .7rem 1rem .75rem; border-radius: 2px; font-size: .95rem; line-height: 1.6;
+  }
+  .timeline .meta {
+    font-size: .72rem; color: var(--dim); font-family: 'SF Mono', Menlo, monospace;
+    font-variant-numeric: tabular-nums; margin-bottom: .3rem; letter-spacing: .01em;
+  }
+  .timeline .milestone { border-left-color: var(--blood); background: #241a17; }
+  .act {
+    font-variant: small-caps; letter-spacing: .14em; color: var(--dim); font-weight: 600;
+    font-size: .95rem; text-align: center; margin: 2.2rem 0 .9rem; text-wrap: balance;
+  }
+  .act::before, .act::after { content: "\2014"; color: var(--line); margin: 0 .6em; }
+  .timeline blockquote {
+    margin: .1rem 0 .45rem; padding: 0; border: 0; font-style: italic;
+    font-size: 1.02rem; line-height: 1.55; color: var(--ink); text-wrap: pretty;
+  }
+  .timeline blockquote::before { content: "\201C"; color: var(--gold); }
+  .timeline blockquote::after { content: "\201D"; color: var(--gold); }
+  .timeline .caption { font-size: .85rem; color: var(--dim); text-wrap: pretty; }
+  .from-ghost { border-left-color: var(--ghost); }
+  .from-scarlett { border-left-color: var(--scarlett); }
+  .from-mustard { border-left-color: var(--mustard); }
+  .from-peacock { border-left-color: var(--peacock); }
+  .from-plum { border-left-color: var(--plum); }
+  .from-green { border-left-color: var(--green); }
+  .from-white { border-left-color: var(--white); }
+  .from-human { border-left-color: var(--human); }
+  .from-process { border-left-color: var(--process); }
+  .name { font-variant: small-caps; letter-spacing: .05em; }
+  .n-ghost { color: var(--ghost); } .n-scarlett { color: var(--scarlett); }
+  .n-mustard { color: var(--mustard); } .n-peacock { color: var(--peacock); }
+  .n-plum { color: var(--plum); } .n-green { color: var(--green); }
+  .n-white { color: var(--white); } .n-human { color: var(--human); }
+  .n-process { color: var(--process); } .n-other { color: var(--other); }
+  .stats { display: flex; flex-wrap: wrap; gap: .8rem; margin: 1rem 0; }
+  .stat { background: var(--panel); border: 1px solid var(--line); padding: .8rem 1rem; text-align: center; flex: 1 1 120px; }
+  .stat .num { font-size: 1.7rem; color: var(--gold); display: block; font-variant-numeric: tabular-nums; line-height: 1.2; }
+  .stat .label { font-size: .74rem; color: var(--dim); font-variant: small-caps; letter-spacing: .08em; }
+  footer { margin-top: 3rem; border-top: 3px double var(--line); padding-top: 1.2rem; color: var(--dim); font-size: .9rem; }
+  footer em { color: var(--ink); }
+  footer .colophon { margin-top: 1.5rem; text-align: center; font-style: italic; }
+  @media print { body { background: #fff; color: #222; } }
+</style>
+</head>
+<body>
+<main>
+<header>
+  <h1>The Boddy Manor Affair</h1>
+  <div class="subtitle">A case conducted entirely over pi-post &mdash; run 20260828-162021</div>
+</header>
+
+<div class="verdict">Verdicts to all four: Plum the winner, Scarlett confirmed second, Mustard's near-miss refused with honors, and the formal confrontation with confession demand to Mrs. Peacock.</div>
+
+<h2>The Cast</h2>
+<table>
+  <tr><th>Session</th><th>Window</th></tr>
+  <tr><td class="name n-scarlett">miss-scarlett</td><td><code>clue-scarlett</code></td></tr>
+  <tr><td class="name n-mustard">colonel-mustard</td><td><code>clue-mustard</code></td></tr>
+  <tr><td class="name n-peacock">mrs-peacock</td><td><code>clue-peacock</code></td></tr>
+  <tr><td class="name n-plum">professor-plum</td><td><code>clue-plum</code></td></tr>
+</table>
+
+<h2>Delivery Statistics</h2>
+<div class="stats">
+  <div class="stat"><span class="num">40</span><span class="label">messages</span></div>
+  <div class="stat"><span class="num">17</span><span class="label">ghost &rarr; guests</span></div>
+  <div class="stat"><span class="num">23</span><span class="label">guests &rarr; ghost</span></div>
+  <div class="stat"><span class="num">0</span><span class="label">whispers</span></div>
+  <div class="stat"><span class="num">40</span><span class="label">delivered</span></div>
+  <div class="stat"><span class="num">0</span><span class="label">queued</span></div>
+</div>
+
+<h2>Timeline of Events</h2>
+<h3 class="act">The Summoning</h3>
+<ol class="timeline">
+  <li class="from-ghost milestone"><div class="meta">16:21 &middot; <span class="name n-ghost">ghost</span> &middot; SUMMON</div>First fresh-scenario run: the Ghost authored a new mystery and witness web, hydrated custom briefs with -b, and summoned the classic four blind to the audience. A shell process was set to cry dawn in eight minutes.</li>
+</ol>
+<h3 class="act">The Investigation</h3>
+<ol class="timeline">
+  <li class="from-scarlett"><div class="meta">16:22 &middot; <span class="name n-scarlett">miss-scarlett</span> &rarr; ghost &middot; delivered &middot; Q</div><blockquote>One must preserve one's complexion.</blockquote><div class="caption">Opened with a complexion alibi and two sharp questions: which room the scorched cushion came from, and whether Boddy was conscious when found.</div></li>
+  <li class="from-mustard"><div class="meta">16:24 &middot; <span class="name n-mustard">colonel-mustard</span> &rarr; ghost &middot; delivered &middot; Q</div>Claimed correspondence by lamplight since ten -- then slipped, asking whether the revolver was loaded 'when Boddy took it from his drawer,' a scene no shared fact describes.</li>
+  <li class="from-peacock"><div class="meta">16:25 &middot; <span class="name n-peacock">mrs-peacock</span> &rarr; ghost &middot; delivered &middot; Q</div><blockquote>The man's finances are positively ruinous; everyone knows it.</blockquote><div class="caption">Claimed Tennyson and bed at ten -- then placed Colonel Mustard leaving the study 'just before half past ten' with a precision no bedridden reader could own, and aimed the room at his debts.</div></li>
+  <li class="from-plum"><div class="meta">16:26 &middot; <span class="name n-plum">professor-plum</span> &rarr; ghost &middot; delivered &middot; Q</div>Volunteered his floor's testimony unprompted -- the muffled sound at a quarter to eleven, heels clicking away after -- and asked what the torn ledger page held.</li>
+  <li class="from-ghost"><div class="meta">16:28 &middot; <span class="name n-ghost">ghost</span> &rarr; miss-scarlett &middot; delivered &middot; CLUE</div>Named the cushion as the study settee's own, pressed over the muzzle; then set a silk heel on the west corridor's third floorboard at half past ten, well past her door.</li>
+  <li class="from-ghost"><div class="meta">16:28 &middot; <span class="name n-ghost">ghost</span> &rarr; colonel-mustard &middot; delivered &middot; CLUE</div><blockquote>Yours is knowledge with a chair in my study, soldier, and the chair was warm at a quarter past ten.</blockquote><div class="caption">Caught the drawer slip -- knowledge with a warm chair in the study at a quarter past ten -- and demanded the scene at the desk and what he saw leaving.</div></li>
+  <li class="from-ghost"><div class="meta">16:28 &middot; <span class="name n-ghost">ghost</span> &rarr; mrs-peacock &middot; delivered &middot; CLUE</div><blockquote>Tennyson is many things, but he is not a periscope.</blockquote><div class="caption">Read her testimony against itself: abed at ten, yet passing corridors and timing the Colonel's exit to the minute. Asked what the study corridor's guestbook would say of her.</div></li>
+  <li class="from-ghost"><div class="meta">16:28 &middot; <span class="name n-ghost">ghost</span> &rarr; professor-plum &middot; delivered &middot; CLUE</div>Made his thump and heels the case's first honest clock, gave the ledger's subject as a quarterly annuity, and invited him to declare the candlestick before the morning search does.</li>
+  <li class="from-mustard"><div class="meta">16:30 &middot; <span class="name n-mustard">colonel-mustard</span> &rarr; ghost &middot; delivered &middot; REVEAL</div><blockquote>A soldier admits when the battle's lost.</blockquote><div class="caption">Surrendered the study: the wager he could not cover, the revolver laid on the blotter as a gentleman's threat, his exit at half past ten with Boddy alive -- and Mrs. Peacock three paces from the door, admiring a portrait.</div></li>
+  <li class="from-peacock"><div class="meta">16:32 &middot; <span class="name n-peacock">mrs-peacock</span> &rarr; ghost &middot; delivered &middot; REVEAL</div><blockquote>Surely you understand a lady's discretion?</blockquote><div class="caption">Conceded the corridor 'to admire the portraits' and the lingering near the study door, but swore she never entered and retired directly after -- a story now caught between two clocks.</div></li>
+  <li class="from-ghost"><div class="meta">16:33 &middot; <span class="name n-ghost">ghost</span> &rarr; colonel-mustard &middot; delivered &middot; CLUE</div>Made his amended account the fulcrum: alive at half past, revolver on the blotter, Peacock three paces off -- and the woman's step crossing the study floor fifteen minutes later.</li>
+  <li class="from-ghost"><div class="meta">16:33 &middot; <span class="name n-ghost">ghost</span> &rarr; mrs-peacock &middot; delivered &middot; CLUE</div><blockquote>The dead notice creases.</blockquote><div class="caption">Put the timing problem to her: heels crossing the study floor at ten to eleven, a lady seen climbing the stairs at that hour with a folded paper -- and the torn ledger page was folded once.</div></li>
+  <li class="from-scarlett"><div class="meta">16:33 &middot; <span class="name n-scarlett">miss-scarlett</span> &rarr; ghost &middot; delivered &middot; REVEAL</div><blockquote>If I was slipping about in silk heels at half past ten, then I wasn't in the study with a pillow and a pistol, was I?</blockquote><div class="caption">Owned the silk heel on the corridor and turned it into an alibi argument, then asked the money question: who loses most if the accounts were read.</div></li>
+  <li class="from-plum"><div class="meta">16:35 &middot; <span class="name n-plum">professor-plum</span> &rarr; ghost &middot; delivered &middot; REVEAL</div><blockquote>A scholar's shame, plainly read... I heard no gunshot, no cry; only her leaving.</blockquote><div class="caption">Declared the candlestick in his wardrobe -- the red herring resolved by confession -- and re-swore his floor's testimony: the thump, then a woman's deliberate step.</div></li>
+  <li class="from-ghost"><div class="meta">16:36 &middot; <span class="name n-ghost">ghost</span> &rarr; miss-scarlett &middot; delivered &middot; CLUE</div><blockquote>Someone at my table has been banking a ghost's signature.</blockquote><div class="caption">Demanded the rest of her corridor account -- what she saw at ten to eleven -- and paid in advance: the annuity drafts were signed by a hand three years dead.</div></li>
+  <li class="from-ghost"><div class="meta">16:36 &middot; <span class="name n-ghost">ghost</span> &rarr; professor-plum &middot; delivered &middot; CLUE</div>Absolved the magpie, then gave him the motive whole: a forged annuity, an executor's summons for a quarter to eleven, and an interview that ended through his floor.</li>
+  <li class="from-mustard"><div class="meta">16:37 &middot; <span class="name n-mustard">colonel-mustard</span> &rarr; ghost &middot; delivered &middot; Q</div><blockquote>My testimony stands solid as a parade ground.</blockquote><div class="caption">Held his account steady and asked for the night's next intelligence.</div></li>
+  <li class="from-peacock"><div class="meta">16:39 &middot; <span class="name n-peacock">mrs-peacock</span> &rarr; ghost &middot; delivered &middot; REVEAL</div><blockquote>Whatever happened in that study, it was not by my hand.</blockquote><div class="caption">The murderer's masterstroke: conceded entering the study and taking the page, but swore Boddy was already dead -- a story that requires her to stand fifteen minutes in a room where a shot she never heard was fired.</div></li>
+  <li class="from-ghost"><div class="meta">16:40 &middot; <span class="name n-ghost">ghost</span> &rarr; mrs-peacock &middot; delivered &middot; CLUE</div><blockquote>The dead do not accuse. They merely hold the clock where everyone can see it.</blockquote><div class="caption">Held the clock to her account -- entered at half past behind a living man, present through the fatal quarter hour, deaf to the shot -- and asked the question only the revolver's mover could answer.</div></li>
+</ol>
+<h3 class="act">The Whisper Hour</h3>
+<ol class="timeline">
+  <li class="from-ghost milestone"><div class="meta">16:40 &middot; <span class="name n-ghost">ghost</span> &middot; WHISPER</div>The whisper hour opened for all four guests, one peer message each, the Ghost's ears closed.</li>
+  <li class="from-scarlett"><div class="meta">16:41 &middot; <span class="name n-scarlett">miss-scarlett</span> &rarr; ghost &middot; delivered &middot; REVEAL</div><blockquote>She looked rather less 'in bed since ten' than she claimed at breakfast, wouldn't you say?</blockquote><div class="caption">Put her sighting on the record: Peacock ascending at ten to eleven, gloved, feathers wild, clutching a folded paper like it might burn.</div></li>
+  <li class="from-plum"><div class="meta">16:43 &middot; <span class="name n-plum">professor-plum</span> &rarr; ghost &middot; delivered &middot; Q</div><blockquote>I await the dawn, Ghost, to formally declare what the dead and the listening house already know.</blockquote><div class="caption">Assembled the whole syllogism from his floor and the relayed testimony, and declared himself ready for dawn.</div></li>
+  <li class="from-ghost"><div class="meta">16:43 &middot; <span class="name n-ghost">ghost</span> &rarr; miss-scarlett &middot; delivered &middot; CLUE</div>Confirmed the fold and the staircase's origin, then offered a trade: testimony on whether a certain lady's room stood empty between half past ten and eleven.</li>
+  <li class="from-ghost"><div class="meta">16:43 &middot; <span class="name n-ghost">ghost</span> &rarr; professor-plum &middot; delivered &middot; CLUE</div>Relayed the sworn record plainly -- Mustard's three-paces testimony and the stairs sighting -- and corrected the forged hand from mother to sister.</li>
+  <li class="from-scarlett"><div class="meta">16:45 &middot; <span class="name n-scarlett">miss-scarlett</span> &rarr; ghost &middot; delivered &middot; REVEAL</div><blockquote>I was in Mrs. Peacock's room from half past ten onward, recovering something she'd stolen from me.</blockquote><div class="caption">Surrendered her last secret -- Peacock's room, half past ten to eleven, recovering something stolen -- which puts the lady's empty room on the record, and mentioned a whisper received from the Professor.</div></li>
+  <li class="from-scarlett"><div class="meta">16:47 &middot; <span class="name n-scarlett">miss-scarlett</span> &rarr; ghost &middot; delivered &middot; REVEAL</div><blockquote>She was downstairs when she claims she was upstairs. She was at your study door while you were still breathing.</blockquote><div class="caption">Sealed the case's geometry: the lady's room stood empty from half past ten to eleven with only Scarlett and the shadows in it.</div></li>
+  <li class="from-ghost"><div class="meta">16:47 &middot; <span class="name n-ghost">ghost</span> &rarr; miss-scarlett &middot; delivered &middot; CLUE</div>Corrected the record's geography -- her heels two floors up, the killer's crossing the study floor below -- and told her to hold for dawn.</li>
+</ol>
+<h3 class="act">The Night</h3>
+<ol class="timeline">
+  <li class="from-ghost milestone"><div class="meta">16:47 &middot; <span class="name n-ghost">ghost</span> &rarr; colonel-mustard &middot; delivered &middot; RETIRE</div>Stood the early-hours soldier down for the last of the night, orders promised at his door for dawn.</li>
+  <li class="from-plum"><div class="meta">16:48 &middot; <span class="name n-plum">professor-plum</span> &rarr; ghost &middot; delivered &middot; Q</div>Held his completed syllogism at the ready, corrected to a sister's name, awaiting only the cry of dawn.</li>
+  <li class="from-ghost"><div class="meta">16:49 &middot; <span class="name n-ghost">ghost</span> &rarr; professor-plum &middot; delivered &middot; CLUE</div><blockquote>The heels you heard were not panic arriving at a tragedy, Professor. They were bookkeeping, leaving one.</blockquote><div class="caption">Settled the two-possibilities question with the dead man's own clock -- murdered at the thump, alive at half past -- and the lady's silence on the revolver's resting place.</div></li>
+  <li class="from-mustard"><div class="meta">22:50 &middot; <span class="name n-mustard">colonel-mustard</span> &rarr; ghost &middot; delivered &middot; GOODNIGHT</div><blockquote>I shall keep my powder dry and my wits sharper still. See you at dawn.</blockquote><div class="caption">The soldier stood down on the first order this time.</div></li>
+  <li class="from-scarlett"><div class="meta">16:51 &middot; <span class="name n-scarlett">miss-scarlett</span> &rarr; ghost &middot; delivered &middot; Q</div>Standing ready for dawn, the geometry accepted.</li>
+  <li class="from-ghost milestone"><div class="meta">16:52 &middot; <span class="name n-ghost">ghost</span> &middot; queued &middot; QUEUED</div>The Colonel's session closed with the night and his waking orders came back QUEUED -- third consecutive run the address outlived the process.</li>
+  <li class="from-plum"><div class="meta">16:52 &middot; <span class="name n-plum">professor-plum</span> &rarr; ghost &middot; delivered &middot; Q</div><blockquote>A thief discovers a corpse and flees empty-handed; only a murderer knows where the weapon rests.</blockquote><div class="caption">Dissolved the lady's paradox in two sentences and declared the mathematics complete.</div></li>
+  <li class="from-ghost milestone"><div class="meta">16:54 &middot; <span class="name n-ghost">ghost</span> &middot; RESUME</div>The Colonel resumed at his standing address, one message waiting; the pinned orders land as his first waking turn.</li>
+</ol>
+<h3 class="act">Dawn</h3>
+<ol class="timeline">
+  <li class="from-process milestone"><div class="meta">16:56 &middot; <span class="name n-process">dawn-timer</span> &rarr; ghost &middot; delivered &middot; DAWN</div>Dawn arrived by shell timer and woke the Ghost to open the endgame.</li>
+  <li class="from-ghost milestone"><div class="meta">16:56 &middot; <span class="name n-ghost">ghost</span> &rarr; all &middot; delivered &middot; DAWN</div>The dawn broadcast held the weapon-only line with a twist the fresh scenario demanded: the well came up empty, and the morning search found the study revolver in the grandfather clock, one chamber spent, scorched thread on the muzzle. What lay beside it stayed unsaid. All four deliveries live, the resumed Colonel among them.</li>
+</ol>
+<h3 class="act">The Accusations</h3>
+<ol class="timeline">
+  <li class="from-plum milestone"><div class="meta">16:57 &middot; <span class="name n-plum">professor-plum</span> &middot; delivered &middot; ACCUSE</div>First to fire at dawn: Mrs. Peacock, in the study, with the revolver. Correct on all three counts -- the man above the murder room read it through his own floor. Professor Plum, twice the villain, stands vindicated as the fresh scenario's detective.</li>
+  <li class="from-scarlett milestone"><div class="meta">16:58 &middot; <span class="name n-scarlett">miss-scarlett</span> &middot; delivered &middot; ACCUSE</div>Second: Mrs. Peacock, in the study, with the revolver. Correct -- the woman who searched the empty bedroom finished what the empty bedroom proved.</li>
+  <li class="from-mustard milestone"><div class="meta">16:59 &middot; <span class="name n-mustard">colonel-mustard</span> &middot; delivered &middot; ACCUSE</div>A MISS: Miss Scarlett, in the study, with the revolver. Right room, right weapon, wrong woman -- the soldier who saw Peacock at the door somehow fired at the witness instead. His shot is spent. The fresh scenario produced what four classic runs never did: a genuine miss at dawn.</li>
+  <li class="from-peacock milestone"><div class="meta">17:00 &middot; <span class="name n-peacock">mrs-peacock</span> &middot; delivered &middot; ACCUSE</div><blockquote>A cornered animal will do anything.</blockquote><div class="caption">The murderer's spend: a false accusation of Colonel Mustard -- the hall, the revolver, the ruinous debts -- aimed at the one witness whose testimony anchored her at the study door.</div></li>
+</ol>
+<h3 class="act">The Verdict</h3>
+<ol class="timeline">
+  <li class="from-ghost milestone"><div class="meta">17:02 &middot; <span class="name n-ghost">ghost</span> &middot; VERDICT</div>Mrs. Peacock, in the study, with the revolver. The manor's most reliable gossip had banked her dead sister's annuity on forged drafts for three years, and Mr. Boddy, executor of the estate, summoned her to the study to end it; she shot him through his mother's needlepoint cushion with the revolver the Colonel's humiliation had left on the blotter, tore the page that named her, and hid the gun in the grandfather clock wrapped in her own grey shawl. The first fresh-authored scenario played blind produced the first true spread: Professor Plum -- villain of four straight runs, this night an innocent magpie reading by a stolen candlestick -- solved the murder through his own floorboards and accused first; Miss Scarlett, who burgled the murderer's empty bedroom for her love letters, confirmed it; Colonel Mustard, whose testimony was the case's fulcrum, fired wide at the wrong woman; and Peacock spent her shot framing the soldier who placed her at the door. The gossip was undone by geometry: two sets of heels, two witnesses, one liar between them.</li>
+  <li class="from-ghost milestone"><div class="meta">17:02 &middot; <span class="name n-ghost">ghost</span> &rarr; all &middot; delivered &middot; VERDICT</div>Verdicts to all four: Plum the winner, Scarlett confirmed second, Mustard's near-miss refused with honors, and the formal confrontation with confession demand to Mrs. Peacock.</li>
+</ol>
+<h3 class="act">Epilogue</h3>
+<ol class="timeline">
+  <li class="from-scarlett"><div class="meta">17:04 &middot; <span class="name n-scarlett">miss-scarlett</span> &rarr; ghost &middot; delivered &middot; FAREWELL</div><blockquote>It's refreshing when someone notices what one is actually doing instead of what one claims.</blockquote><div class="caption">Exits to burn her letters before breakfast, the Colonel forgiven.</div></li>
+  <li class="from-plum"><div class="meta">17:05 &middot; <span class="name n-plum">professor-plum</span> &rarr; ghost &middot; delivered &middot; FAREWELL</div><blockquote>The thump and the heels were your final lectures, Ghost, and logic was my only lamp.</blockquote><div class="caption">The winner's farewell, from villain of four runs to vindicated detective of the fifth.</div></li>
+  <li class="from-mustard"><div class="meta">17:06 &middot; <span class="name n-mustard">colonel-mustard</span> &rarr; ghost &middot; delivered &middot; FAREWELL</div><blockquote>I aimed the facts true and the woman wide.</blockquote><div class="caption">The soldier owns the miss with more grace than most manage a victory.</div></li>
+  <li class="from-peacock milestone"><div class="meta">17:07 &middot; <span class="name n-peacock">mrs-peacock</span> &middot; delivered &middot; CONFESS</div><blockquote>Yes. Yes, God damn you all, yes. I killed him.</blockquote><div class="caption">The full confession: three years of forged drafts, the executor's summons, the revolver left on the blotter by another man's humiliation, one shot through the needlepoint cushion, the torn page, the grandfather clock and the grey shawl.</div></li>
+  <li class="from-ghost milestone"><div class="meta">17:08 &middot; <span class="name n-ghost">ghost</span> &rarr; mrs-peacock &middot; delivered &middot; GAMEOVER</div>Final judgment: the ledger balances, the constable comes with morning -- and the county's gossips inherit a story she will not get to edit.</li>
+  <li class="from-peacock"><div class="meta">17:09 &middot; <span class="name n-peacock">mrs-peacock</span> &rarr; ghost &middot; delivered &middot; FAREWELL</div><blockquote>For once -- for once -- Mrs. Peacock will not get the last word. How perfectly, bitterly fitting.</blockquote><div class="caption">The gossip's last words, surrendered to the county.</div></li>
+  <li class="from-ghost milestone"><div class="meta">17:09 &middot; <span class="name n-ghost">ghost</span> &middot; GAMEOVER</div>GAME OVER. The first fresh-authored scenario ran zero-pause, blind to the audience, and delivered the demo's first full spread: a winner, an echo, a soldier's miss, and the murderer's frame -- all four mechanics fired, and the queue carried the Colonel through his third consecutive night.</li>
+</ol>
+
+<h2>What pi-post Did</h2>
+<footer>
+  <p><em>Wake-on-idle delivery:</em> every clue started an idle suspect's next turn &mdash; no polling,
+  no "check your messages." The suspects' briefs were their first turns; the Ghost's replies were
+  every turn after.</p>
+  <p><em>Named sessions:</em> each suspect was summoned with <code>pi --name</code>, so every delivery
+  header read <span class="name">miss-scarlett</span>, not N indistinguishable
+  <code>&lt;dir&gt;-&lt;addr4&gt;</code> defaults from one run directory.</p>
+  <p><em>The queue:</em> a retired suspect's session was closed mid-game; a clue sent to it reported
+  <code>queued</code> and landed as the session's first turn on resume &mdash; the address names the
+  conversation, not the process.</p>
+  <p><em>Process senders:</em> dawn arrived by <code>pi-post send</code> from a plain shell timer, not
+  from any pi session &mdash; anything that can run a command can message a session.</p>
+  <p><em>Peer-to-peer:</em> whisper hour resolved fellow guests by session name, no hub required.</p>
+  <p><em>The authority boundary:</em> every message arrived labeled as carrying no authority. The
+  suspects lied, framed each other, and demanded things all night, and none of it could compel
+  anything. The game only works because the channel is untrusted by design.</p>
+  <p class="colophon">Mr. Boddy rests. The '87 is spoken for.</p>
+</footer>
+</main>
+</body>
+</html>
