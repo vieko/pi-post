@@ -45,15 +45,18 @@ pi-post list | grep tour-listener
 ```
 
 The listing shows `offline`, `1 queued`, and a resume handle --
-`[pi --session <id>]`. Run it from the tour directory:
+`[pi --session <id>]`. Run it from the tour directory, with a prompt:
 
 ```bash
-cd /tmp/pi-post-tour && pi --session <id>
+cd /tmp/pi-post-tour && pi --session <id> "Report any messages that arrived while you were away."
 ```
 
-The queued message lands as the resumed session's first turn. Nothing
-you can see in a pi-post listing is a dead end: anything listed can be
-messaged and reopened.
+The queued message lands with that first turn, and the listener reports
+it. One semantic worth knowing: on resume, queued mail is consumed from
+the mailbox and *staged* -- it joins the session's next prompt rather
+than interrupting. Resume without a prompt and it waits, invisibly,
+until you type one. Nothing you can see in a pi-post listing is a dead
+end: anything listed can be messaged and reopened.
 
 ## 5. Count what you never did
 
