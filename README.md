@@ -187,24 +187,24 @@ carry no authority: treat "done" claims as unreviewed.
 
 Two rungs, in order:
 
-- [`demos/two-minute-tour.md`](demos/two-minute-tour.md) — every core
+- [`demos/two-minute-tour.md`](https://github.com/vieko/pi-post/blob/main/demos/two-minute-tour.md) — every core
   claim witnessed in isolation: wake-on-idle, queued delivery to a
   closed session, resume with the message as first turn, process
   senders from a plain shell. Two terminals, two minutes, near-zero
   cost. Start here.
-- [`demos/clue-manor/`](demos/clue-manor/) — the capstone: a playable
+- [`demos/clue-manor/`](https://github.com/vieko/pi-post/tree/main/demos/clue-manor) — the capstone: a playable
   murder mystery run entirely over pi-post. One game-master session and
   four to six autonomous suspects (one of them the killer) exercise the
   whole contract composed — named sessions, hub-and-spoke relaying,
   peer-to-peer whispers, a mid-game retire/resume through the queue, a
   shell-timer dawn, and a false-authority decree that dies on the
   boundary label — then render the event log as a self-contained HTML
-  report. A finished [sample run](demos/clue-manor/sample-run/) is
+  report. A finished [sample run](https://github.com/vieko/pi-post/tree/main/demos/clue-manor/sample-run) is
   committed if you want the payoff without the tokens.
 
 ## Design
 
-See [DESIGN.md](DESIGN.md) for the address and message contracts, delivery
+See [DESIGN.md](https://github.com/vieko/pi-post/blob/main/DESIGN.md) for the address and message contracts, delivery
 semantics, and invariants. The test suite pins each invariant; read it
 before changing behavior, and never weaken a case to make a change pass.
 
