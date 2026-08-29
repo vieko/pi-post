@@ -68,14 +68,22 @@ export function deposit(root: string, address: string, message: Message): string
   return path;
 }
 
+/** A queued message read off disk but not yet consumed. */
+export interface ClaimedMessage {
+  message: Message;
+  path: string;
+}
+
 /**
- * Drain an inbox oldest-first. Each message is unlinked *before* it is
- * returned, so nothing is ever delivered twice. Malformed files are removed
- * and skipped. ENOENT races (another drain won) are tolerated silently.
+ * Read an inbox oldest-first WITHOUT consuming: each message stays on disk
+ * until `consume(path)` acknowledges it, so a crash between claiming and
+ * context entry redelivers rather than loses (at-least-once — safe because
+ * messages carry no authority). Malformed files are removed and skipped;
+ * ENOENT races are tolerated silently.
  */
-export function drain(root: string, address: string): Message[] {
+export function claim(root: string, address: string): ClaimedMessage[] {
   const dir = inboxDir(root, address);
-  const messages: Message[] = [];
+  const claimed: ClaimedMessage[] = [];
   for (const name of messageFiles(dir)) {
     const path = join(dir, name);
     let raw: string;
@@ -84,13 +92,49 @@ export function drain(root: string, address: string): Message[] {
     } catch {
       continue; // gone: another reader took it
     }
+    const message = parseMessage(raw);
+    if (!message) {
+      try {
+        unlinkSync(path);
+      } catch {
+        // raced away; ignore
+      }
+      continue; // malformed: removed, never redelivered
+    }
+    claimed.push({ message, path });
+  }
+  return claimed;
+}
+
+/**
+ * Consume a claimed message: the unlink is the receipt the sender's
+ * `awaitConsumption` watches for. Call it only after the message has been
+ * disposed — entered context, or deliberately dropped by mode/guard.
+ * A message that already vanished (another consumer won) is tolerated.
+ */
+export function consume(path: string): void {
+  try {
+    unlinkSync(path);
+  } catch {
+    // already consumed; ignore
+  }
+}
+
+/**
+ * Drain an inbox oldest-first with exactly-once semantics: each message is
+ * returned only if this caller won its unlink. For delivery into a session
+ * context prefer `claim` + `consume`, which trades exactly-once for
+ * at-least-once so a crash mid-delivery cannot lose mail.
+ */
+export function drain(root: string, address: string): Message[] {
+  const messages: Message[] = [];
+  for (const { message, path } of claim(root, address)) {
     try {
       unlinkSync(path);
     } catch {
       continue; // lost the race after reading; treat as not ours
     }
-    const message = parseMessage(raw);
-    if (message) messages.push(message);
+    messages.push(message);
   }
   return messages;
 }

@@ -8,6 +8,20 @@ export function inboundMode(env: NodeJS.ProcessEnv = process.env): InboundMode {
   return "accept";
 }
 
+export type ResumeMode = "wake" | "stage";
+
+/**
+ * What happens to mail queued while the session was closed. "wake"
+ * (default): it starts the resumed session's first turn, symmetric with
+ * wake-on-idle — a resumed worker that only ever receives peer messages
+ * must not strand its mail waiting for a prompt that never comes.
+ * "stage": it waits in context for the first user prompt (resume-to-browse
+ * without spending a turn).
+ */
+export function resumeMode(env: NodeJS.ProcessEnv = process.env): ResumeMode {
+  return env.PI_POST_RESUME === "stage" ? "stage" : "wake";
+}
+
 export type GuardVerdict = "deliver" | "drop-duplicate" | "drop-rate";
 
 const DUPLICATE_WINDOW_MS = 10_000;

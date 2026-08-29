@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { createMessage } from "../src/message.ts";
-import { inboundMode, LoopGuard } from "../src/policy.ts";
+import { inboundMode, resumeMode, LoopGuard } from "../src/policy.ts";
 
 const from = { kind: "session" as const, name: "peer", address: "s-aaaaaaaaaaaa" };
 
@@ -10,6 +10,13 @@ test("inbound mode defaults to accept and ignores junk", () => {
   assert.equal(inboundMode({ PI_POST_INBOUND: "ask" }), "ask");
   assert.equal(inboundMode({ PI_POST_INBOUND: "refuse" }), "refuse");
   assert.equal(inboundMode({ PI_POST_INBOUND: "banana" }), "accept");
+});
+
+test("resume mode defaults to wake; only 'stage' opts out", () => {
+  assert.equal(resumeMode({}), "wake");
+  assert.equal(resumeMode({ PI_POST_RESUME: "stage" }), "stage");
+  assert.equal(resumeMode({ PI_POST_RESUME: "wake" }), "wake");
+  assert.equal(resumeMode({ PI_POST_RESUME: "banana" }), "wake");
 });
 
 test("identical body from one sender inside the window is dropped", () => {

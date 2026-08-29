@@ -13,15 +13,16 @@ import { createMessage, type Message } from "../src/message.ts";
 import {
   awaitConsumption,
   postRoot,
+  claim,
+  consume,
   deposit,
-  drain,
   ensureDirs,
   peek,
   watchInbox,
   BacklogFullError,
 } from "../src/mailbox.ts";
 import { formatDelivery, formatListing } from "../src/format.ts";
-import { inboundMode, LoopGuard } from "../src/policy.ts";
+import { inboundMode, resumeMode, LoopGuard } from "../src/policy.ts";
 import {
   defaultSessionName,
   listRecords,
@@ -81,7 +82,15 @@ export default function (pi: ExtensionAPI) {
     if (draining || !selfAddress) return;
     draining = true;
     try {
-      for (const message of drain(root, selfAddress)) await deliver(ctx, message, deliverAs);
+      for (const { message, path } of claim(root, selfAddress)) {
+        // Disk-then-context ordering: the file is consumed only after the
+        // message has been disposed — entered context, or deliberately
+        // dropped by mode/guard/decline. A crash mid-loop redelivers on the
+        // next start rather than losing mail (at-least-once; messages carry
+        // no authority, so redelivery is safe).
+        await deliver(ctx, message, deliverAs);
+        consume(path);
+      }
     } finally {
       draining = false;
     }
@@ -112,8 +121,12 @@ export default function (pi: ExtensionAPI) {
     sweepRegistry(root);
     sweepInboxes(root);
 
-    // Queued messages wait in context for the first prompt; they never start a turn.
-    await drainAll(ctx, "nextTurn");
+    // Wake-on-resume: mail queued while the session was closed starts its
+    // own turn, symmetric with wake-on-idle — a resumed worker that only
+    // ever receives peer messages must not strand its mail waiting for a
+    // prompt that never comes. PI_POST_RESUME=stage restores the old
+    // wait-for-first-prompt staging (resume-to-browse without a turn).
+    await drainAll(ctx, resumeMode() === "stage" ? "nextTurn" : "steer");
 
     const onMessage = () => void drainAll(ctx, "steer");
     watchers = [watchInbox(root, selfAddress, onMessage)];

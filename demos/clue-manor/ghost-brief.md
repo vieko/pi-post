@@ -164,13 +164,11 @@ Mustard (4-cast). After their GOODNIGHT arrives:
    `"type":"queued","status":"queued"`. If it reads `delivered`, the
    session had not gone offline yet; wait and repeat with a second clue.
 3. Resume them: find the session id via `list_sessions` (the offline
-   entry shows `[pi --session <id>]` and a queued count), then resume
-   WITH A WAKING PROMPT — queued mail is staged on resume and only
-   joins the next prompt, so a bare resume leaves it waiting invisibly:
-   `tmux new-window -d -n clue-white -c "$RUN" "pi $PI_ARGS --session <id> 'You wake. Read what was left at your door and act on it.'"`
-4. The queued clue lands with that waking turn — the suspect's reply
-   quoting it is the proof. Log a `resume` milestone quoting the
-   delivery.
+   entry shows `[pi --session <id>]` and a queued count), then:
+   `tmux new-window -d -n clue-white -c "$RUN" "pi $PI_ARGS --session <id>"`
+4. The queued clue starts the resumed session's first turn (pi-post
+   ≥ 0.8 wakes on resume) — the suspect's reply quoting it is the
+   proof. Log a `resume` milestone quoting the delivery.
 
 This is pi-post's core claim demonstrated: the address names the
 conversation, not the process.

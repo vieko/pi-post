@@ -89,15 +89,22 @@ One message per file, named `<sentAt ms, 13 digits>-<8 hex nonce>.json`:
    draining reader never observes a partial message.
 3. If the target session is live, the sender waits up to 1.5 s for the
    file to vanish and reports **delivered**; otherwise **queued**.
-4. The receiver drains oldest-first, unlinking each message as it reads
-   it. Nothing is delivered twice; consumption is the receipt.
+4. The receiver claims oldest-first, leaving each message ON DISK until
+   it has been disposed — entered context, or deliberately dropped by
+   mode/guard — and only then unlinks it. The unlink is the receipt. A
+   crash mid-delivery therefore redelivers rather than loses:
+   at-least-once, which is safe because messages carry no authority.
 5. Each message passes the inbound guard (mode + loop caps), then enters
    context wrapped in the boundary preamble:
    - live messages → `deliverAs: "steer"`, `triggerTurn: true` — land between
      tool calls; **wakes an idle session**, so a freshly spawned worker's
      first turn can be the brief itself
-   - startup/resume drain → `deliverAs: "nextTurn"` — waits in context for
-     the next prompt; a queued message never starts a turn on its own
+   - startup/resume drain → the same wake: mail queued while the session
+     was closed starts the resumed session's first turn. A worker driven
+     only by peer messages must never strand its mail waiting for a
+     prompt that never comes. `PI_POST_RESUME=stage` opts a session back
+     into wait-for-first-prompt staging (resume-to-browse without
+     spending a turn).
 
 ## The boundary
 
@@ -115,7 +122,10 @@ Each is pinned by a test.
   session resumed tomorrow answers to the same address.
 - **A reader never sees half a message.** Rename-into-place; only
   `.json` is read.
-- **Nothing is delivered twice.** Unlink before handling.
+- **Nothing is lost.** A message leaves disk only after it is disposed
+  — delivered into context or deliberately dropped. A crash between
+  context entry and unlink redelivers on the next start: at-least-once,
+  never silent loss. (Duplicates are safe; messages carry no authority.)
 - **Messages outrank tidiness.** No sweep deletes a non-empty mailbox, and
   queued messages pin the target's registry record: a record is swept only
   when it is offline, stale (7 days), *and* its mailbox is empty. Empty
@@ -133,6 +143,10 @@ Each is pinned by a test.
 
 `PI_POST_INBOUND`: `accept` (default) delivers, `ask` prompts per message
 where a UI exists (falls back to accept headless), `refuse` drops.
+
+`PI_POST_RESUME`: `wake` (default) starts the resumed session's first
+turn with its queued mail; `stage` holds it in context for the first
+user prompt.
 
 ## Non-goals
 

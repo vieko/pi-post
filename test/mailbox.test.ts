@@ -8,6 +8,8 @@ import {
   awaitConsumption,
   BACKLOG_CAP,
   BacklogFullError,
+  claim,
+  consume,
   deposit,
   drain,
   inboxDir,
@@ -65,6 +67,49 @@ test("peek has no side effects", () => {
   deposit(root, ADDR, createMessage({ from, body: "still here" }));
   assert.equal(peek(root, ADDR).length, 1);
   assert.equal(peek(root, ADDR).length, 1);
+  assert.equal(queuedCount(root, ADDR), 1);
+});
+
+test("claim leaves mail on disk: a crash before consume redelivers, never loses", () => {
+  const root = newRoot();
+  deposit(root, ADDR, createMessage({ from, body: "second", now: 2000 }));
+  deposit(root, ADDR, createMessage({ from, body: "first", now: 1000 }));
+
+  const claimed = claim(root, ADDR);
+  assert.deepEqual(claimed.map((c) => c.message.body), ["first", "second"]);
+
+  // Nothing consumed yet: the mailbox still holds both, and a second
+  // claimer (a restart after a crash) sees the same mail again.
+  assert.equal(queuedCount(root, ADDR), 2);
+  assert.deepEqual(claim(root, ADDR).map((c) => c.message.body), ["first", "second"]);
+
+  // Consumption is the receipt, message by message.
+  consume(claimed[0]!.path);
+  assert.deepEqual(claim(root, ADDR).map((c) => c.message.body), ["second"]);
+  consume(claimed[1]!.path);
+  assert.deepEqual(claim(root, ADDR), []);
+  assert.equal(queuedCount(root, ADDR), 0);
+});
+
+test("consume tolerates a message that already vanished", () => {
+  const root = newRoot();
+  const [claimed] = claim(
+    (deposit(root, ADDR, createMessage({ from, body: "x" })), root),
+    ADDR,
+  );
+  consume(claimed!.path);
+  consume(claimed!.path); // second receipt: no throw, no effect
+  assert.equal(queuedCount(root, ADDR), 0);
+});
+
+test("claim removes malformed files instead of redelivering them forever", () => {
+  const root = newRoot();
+  mkdirSync(inboxDir(root, ADDR), { recursive: true });
+  writeFileSync(join(inboxDir(root, ADDR), "0000000000001-00000000.json"), "not json");
+  deposit(root, ADDR, createMessage({ from, body: "whole" }));
+
+  assert.deepEqual(claim(root, ADDR).map((c) => c.message.body), ["whole"]);
+  // The malformed file is gone; the real message still awaits its receipt.
   assert.equal(queuedCount(root, ADDR), 1);
 });
 
