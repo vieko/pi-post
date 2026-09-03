@@ -43,6 +43,25 @@ This is what lets the workflow publish without a stored token or a 2FA prompt.
    The tag version must equal `package.json`'s (the workflow enforces this).
    Watch it land: `gh run watch`.
 
+### Known local-only failure
+
+On some managed macOS hosts (seen on `phyrexia`, 2026-09-03), `npm run check`
+fails one test locally while CI is green:
+
+```
+✖ an oversize body is refused with a nonzero exit
+   actual: null, expected: 1
+```
+
+`status: null` means the child was `SIGKILL`ed, not that the cap check
+misbehaved: any `node bin/pi-post.mjs ...` invocation carrying a ~33 KB
+argv element is killed before the script runs, while plain `node` with
+the same argument is fine. That points at endpoint security on the
+host, not at pi-post. Confirm by checking the release workflow of the
+previous tag passed with the test unchanged, then proceed; the tag's
+CI gate is the one that counts. Do not weaken the test to make the
+local run pass.
+
 ## Installing a fresh release locally
 
 If npm's `min-release-age` cooldown is configured, a just-published version is
