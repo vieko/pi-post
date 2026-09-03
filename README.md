@@ -187,7 +187,7 @@ carry no authority: treat "done" claims as unreviewed.
 
 ## Demos
 
-Two rungs, in order:
+Two rungs, in order, then the everyday one:
 
 - [`demos/two-minute-tour.md`](https://github.com/vieko/pi-post/blob/main/demos/two-minute-tour.md) — every core
   claim witnessed in isolation: wake-on-idle, queued delivery to a
@@ -203,6 +203,11 @@ Two rungs, in order:
   boundary label — then render the event log as a self-contained HTML
   report. A finished [sample run](https://github.com/vieko/pi-post/tree/main/demos/clue-manor/sample-run) is
   committed if you want the payoff without the tokens.
+- [`demos/pr-wait/`](https://github.com/vieko/pi-post/tree/main/demos/pr-wait) — the shape you will
+  actually reuse: a shell script waits on something outside pi (a PR's
+  checks), then `pi-post send`s the result. Run it `--detach` from a
+  bash tool and the agent's ten-minute `sleep` loop becomes a turn
+  boundary: end the turn, get woken with the verdict.
 
 ## Design
 
