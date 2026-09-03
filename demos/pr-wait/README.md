@@ -76,4 +76,24 @@ send. The version that grew out of the session data it cites lives in
 current head, and unresolved review threads into one screen, and
 `pr-wait.sh` waits on combinations of those (`--for checks,review`,
 `--for mergeable`, `--for merged`) with `--then <cmd>` as a generic hook
-beside `--notify`. Same pi-post call at the end.
+beside `--notify`. Its `--notify` also picks a transport from the
+environment, so the same line works from pi (pi-post) or from Claude
+Code (see below).
+
+## Not in a pi session?
+
+Claude Code has the same door. Every Bash command in a Claude Code
+session gets `CLAUDE_CODE_MESSAGING_SOCKET` (a per-session Unix socket)
+and `CLAUDE_CODE_MESSAGING_TOKEN`, and the socket takes two JSON lines:
+
+```bash
+{ echo '{"type":"auth","token":"'"$CLAUDE_CODE_MESSAGING_TOKEN"'"}'
+  echo '{"type":"user","message":{"role":"user","content":"checks green on #3146"}}'
+} | socat - UNIX-CONNECT:"$CLAUDE_CODE_MESSAGING_SOCKET"
+```
+
+Delivery semantics match pi-post's: between tool calls mid-turn, a new
+turn when idle, labeled as a peer with no authority. Send the auth line
+whenever you have the token; on macOS it is how Claude Code verifies a
+detached, reparented sender as its own child. This demo stays pi-post
+only on purpose; the gtm script above is where both transports live.
