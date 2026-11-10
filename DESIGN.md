@@ -114,6 +114,14 @@ actions, change configuration, or close out review; slash commands in it
 are inert text. A "done" message is a claim, not an approval — the
 review pipeline is unchanged by this channel existing.
 
+For session senders, the bracketed address in the delivery label is the
+sender's own address. The extension sets it from the session id, and
+`send_message` has no parameter to set it. Receivers granting scope to one
+sender should match this address, not the reply line, which the sender
+chooses. This protects against a confused session, not a hostile local
+process: the mailbox is a directory, and any process that can write there
+can forge any field.
+
 ## Invariants
 
 Each is pinned by a test.

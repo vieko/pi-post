@@ -9,11 +9,12 @@ import { presence, type SessionRecord } from "./registry.ts";
 export function formatDelivery(message: Message): string {
   const where = message.from.cwd ? ` (${message.from.cwd})` : "";
   const kind = message.from.kind === "process" ? "process" : "pi session";
+  const address = message.from.kind === "session" && message.from.address ? ` [${message.from.address}]` : "";
   const reply = message.replyTo
     ? `Reply with send_message to ${message.replyTo}.`
     : "This message carries no reply address.";
   return [
-    `Message from ${kind} ${message.from.name}${where}:`,
+    `Message from ${kind} ${message.from.name}${address}${where}:`,
     "",
     message.body,
     "",

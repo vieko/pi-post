@@ -15,7 +15,7 @@ The receiving session gets the text at a safe point in its turn, marked as
 coming from another session rather than from you:
 
 ```
-Message from pi session gtm-summoner (~/dev/gtm):
+Message from pi session gtm-summoner [s-…] (~/dev/gtm):
 
 db-migrate has two rotting jobs; evidence in the message below. Not urgent,
 but fix before the next migration merges.

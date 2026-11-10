@@ -3,12 +3,57 @@ import assert from "node:assert/strict";
 import { mkdtempSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { formatListing, relativeAge, resumeHandle } from "../src/format.ts";
+import { formatDelivery, formatListing, relativeAge, resumeHandle } from "../src/format.ts";
 import { writeRecord, type SessionRecord } from "../src/registry.ts";
 import { createMessage } from "../src/message.ts";
 import { deposit } from "../src/mailbox.ts";
 
 const newRoot = () => mkdtempSync(join(tmpdir(), "post-fmt-"));
+
+test("delivery labels a session with its own address and cwd", () => {
+  const delivery = formatDelivery(createMessage({
+    from: { kind: "session", name: "gtm-summoner", address: "s-aaaaaaaaaaaa", cwd: "/dev/gtm" },
+    body: "hello",
+  }));
+  assert.equal(delivery.split("\n")[0], "Message from pi session gtm-summoner [s-aaaaaaaaaaaa] (/dev/gtm):");
+});
+
+test("delivery labels a session address without a cwd", () => {
+  const delivery = formatDelivery(createMessage({
+    from: { kind: "session", name: "gtm-summoner", address: "s-aaaaaaaaaaaa" },
+    body: "hello",
+  }));
+  assert.equal(delivery.split("\n")[0], "Message from pi session gtm-summoner [s-aaaaaaaaaaaa]:");
+});
+
+test("session without an address keeps the existing unbracketed label", () => {
+  const delivery = formatDelivery(createMessage({
+    from: { kind: "session", name: "gtm-summoner", cwd: "/dev/gtm" },
+    body: "hello",
+  }));
+  assert.equal(delivery.split("\n")[0], "Message from pi session gtm-summoner (/dev/gtm):");
+  assert.doesNotMatch(delivery.split("\n")[0]!, /\[/);
+});
+
+test("process address fields are not shown in the sender label", () => {
+  const delivery = formatDelivery(createMessage({
+    from: { kind: "process", name: "exit-hook", address: "s-aaaaaaaaaaaa" },
+    body: "hello",
+  }));
+  assert.equal(delivery.split("\n")[0], "Message from process exit-hook:");
+  assert.doesNotMatch(delivery.split("\n")[0]!, /\[/);
+});
+
+test("delivery shows sender address separately from the chosen reply address", () => {
+  const delivery = formatDelivery(createMessage({
+    from: { kind: "session", name: "gtm-summoner", address: "s-aaaaaaaaaaaa" },
+    replyTo: "s-bbbbbbbbbbbb",
+    body: "hello",
+  }));
+  assert.match(delivery, /^Message from pi session gtm-summoner \[s-aaaaaaaaaaaa\]:/);
+  assert.ok(delivery.includes("Reply with send_message to s-bbbbbbbbbbbb."));
+  assert.ok(!delivery.includes("Reply with send_message to s-aaaaaaaaaaaa."));
+});
 
 function record(overrides: Partial<SessionRecord>): SessionRecord {
   return {
