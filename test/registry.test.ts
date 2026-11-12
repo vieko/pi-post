@@ -14,6 +14,7 @@ import {
   readRecord,
   sweepInboxes,
   sweepRegistry,
+  touchRecord,
   writeRecord,
   type SessionRecord,
 } from "../src/registry.ts";
@@ -52,6 +53,20 @@ test("a record outlives the process: shutdown marks offline, never removes", () 
   const after = readRecord(root, "s-aaaaaaaaaaaa");
   assert.ok(after, "record still exists after shutdown");
   assert.equal(presence(after), "offline");
+});
+
+test("registry records retain an optional parent through heartbeat and shutdown", () => {
+  const root = newRoot();
+  const address = "s-aaaaaaaaaaaa";
+  const parent = "s-bbbbbbbbbbbb";
+  writeRecord(root, record({ parent }));
+  touchRecord(root, address);
+  assert.equal(readRecord(root, address)?.parent, parent);
+  markOffline(root, address);
+  assert.equal(readRecord(root, address)?.parent, parent);
+  writeRecord(root, record());
+  assert.equal(readRecord(root, address)?.parent, undefined);
+  assert.equal(readRecord(root, address)?.v, 1);
 });
 
 test("a dead pid reads as offline even if shutdown never ran", () => {

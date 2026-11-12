@@ -35,6 +35,7 @@ import {
 } from "../src/registry.ts";
 import { resolveTargets } from "../src/resolve.ts";
 import { ensureCliShim } from "../src/cli-shim.ts";
+import { pickParent } from "../src/parent.ts";
 
 const HEARTBEAT_MS = 30_000;
 const CLI_TARGET = resolve(dirname(fileURLToPath(import.meta.url)), "../bin/pi-post.mjs");
@@ -44,6 +45,7 @@ export default function (pi: ExtensionAPI) {
   const guard = new LoopGuard();
 
   let selfAddress: string | undefined;
+  let parent: string | undefined;
   let selfName = "pi";
   let watchers: FSWatcher[] = [];
   let heartbeat: ReturnType<typeof setInterval> | undefined;
@@ -70,7 +72,7 @@ export default function (pi: ExtensionAPI) {
     pi.sendMessage(
       {
         customType: "pi-post",
-        content: formatDelivery(message),
+        content: formatDelivery(message, { parent }),
         display: true,
         details: { message },
       },
@@ -86,8 +88,8 @@ export default function (pi: ExtensionAPI) {
         // Disk-then-context ordering: the file is consumed only after the
         // message has been disposed — entered context, or deliberately
         // dropped by mode/guard/decline. A crash mid-loop redelivers on the
-        // next start rather than losing mail (at-least-once; messages carry
-        // no authority, so redelivery is safe).
+        // next start rather than losing mail. Receivers must handle duplicate
+        // requests safely, including requests from their summoner.
         await deliver(ctx, message, deliverAs);
         consume(path);
       }
@@ -100,6 +102,11 @@ export default function (pi: ExtensionAPI) {
     const sessionId = ctx.sessionManager.getSessionId();
     const canonical = canonicalPath(ctx.cwd);
     selfAddress = sessionAddress(sessionId);
+    const envParent = process.env.PI_POST_PARENT;
+    delete process.env.PI_POST_PARENT;
+    const binding = pickParent(ctx.sessionManager.getEntries(), envParent, selfAddress);
+    parent = binding.parent;
+    if (binding.append) pi.appendEntry("pi-post-parent", { parent });
     selfName = pi.getSessionName() ?? defaultSessionName(canonical, selfAddress);
     // Expose the address to child processes (bash tools inherit process.env),
     // so scripts can capture a send_message target without shelling out to
@@ -111,6 +118,7 @@ export default function (pi: ExtensionAPI) {
     writeRecord(root, {
       v: 1,
       address: selfAddress,
+      ...(parent ? { parent } : {}),
       sessionId,
       name: selfName,
       cwd: canonical,
