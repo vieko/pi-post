@@ -94,19 +94,24 @@ One message per file, named `<sentAt ms, 13 digits>-<8 hex nonce>.json`:
    it has been disposed — entered context, or deliberately dropped by
    mode/guard — and only then unlinks it. The unlink is the receipt. A
    crash mid-delivery therefore redelivers rather than loses:
-   at-least-once. Receivers must handle duplicate requests safely, including
-   requests from their summoner.
+   at-least-once. Pi's message event fires before persistence, so the
+   receiver checks the session file for the matching message ID and content
+   before unlinking. If the session file is unavailable, including for an
+   ephemeral session, the message stays queued and may be delivered again.
+   Receivers must handle duplicate requests safely, including requests from
+   their summoner.
 5. Each message passes the inbound guard (mode + loop caps), then enters
    context wrapped in the boundary preamble:
    - live messages → `deliverAs: "steer"`, `triggerTurn: true` — land between
      tool calls; **wakes an idle session**, so a freshly spawned worker's
      first turn can be the brief itself
-   - startup/resume drain → the same wake: mail queued while the session
-     was closed starts the resumed session's first turn. A worker driven
-     only by peer messages must never strand its mail waiting for a
-     prompt that never comes. `PI_POST_RESUME=stage` opts a session back
-     into wait-for-first-prompt staging (resume-to-browse without
-     spending a turn).
+   - interactive and RPC startup/resume drain → the same wake, unless
+     `PI_POST_RESUME=stage` requests wait-for-first-prompt staging
+     (resume-to-browse without spending a turn).
+   - print and JSON startup/resume drain → `deliverAs: "nextTurn"`, so
+     the queued mail joins the command-line prompt without starting a
+     conflicting turn. Pi does not expose whether that prompt exists, so
+     a promptless print run leaves the mail queued for a later run.
 
 ## The boundary
 
@@ -172,9 +177,9 @@ Each is pinned by a test.
 `PI_POST_INBOUND`: `accept` (default) delivers, `ask` prompts per message
 where a UI exists (falls back to accept headless), `refuse` drops.
 
-`PI_POST_RESUME`: `wake` (default) starts the resumed session's first
-turn with its queued mail; `stage` holds it in context for the first
-user prompt.
+`PI_POST_RESUME`: `wake` (default) starts an interactive or RPC resumed
+session's first turn with its queued mail; `stage` holds it for the first
+user prompt. Print and JSON startup mail always waits for the prompt.
 
 ## Non-goals
 

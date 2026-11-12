@@ -41,9 +41,10 @@ smuggling state between sessions.
 
 **An address that outlives the process.** A session address names a
 conversation, not a process: the same session resumed tomorrow answers to
-the same address, and messages queued while it was closed start its first
-turn on resume (set `PI_POST_RESUME=stage` to hold them for your first
-prompt instead). A directory path as a target is a *query* — it resolves to the
+the same address. Queued messages start the first turn on interactive or RPC
+resume (set `PI_POST_RESUME=stage` to wait for a prompt). Print and JSON runs
+hold queued messages for their prompt; without one, the messages stay queued.
+A directory path as a target is a *query* — it resolves to the
 session registered in that directory, live sessions first, ambiguity
 refused.
 
@@ -145,7 +146,7 @@ sessions can read state; only one can consume a message.
 | --- | --- | --- |
 | `PI_POST_PARENT` | — | Session address of the summoner that started this session; persisted on first binding and not inherited by children |
 | `PI_POST_INBOUND` | `accept` | `accept` delivers, `ask` prompts per message (falls back to accept headless), `refuse` drops |
-| `PI_POST_RESUME` | `wake` | `wake` starts the resumed session's first turn with its queued mail; `stage` holds it for the first user prompt |
+| `PI_POST_RESUME` | `wake` | `wake` starts the resumed interactive or RPC session's first turn with its queued mail; `stage` waits for a prompt. Print and JSON runs always wait for a prompt. |
 | `PI_POST_DIR` | `~/.pi/agent/post` | Where the registry and mailboxes live |
 | `PI_POST_FROM` | — | Default `--from` label for the CLI |
 | `PI_POST_REPLY_TO` | — | Default `--reply-to` address for the CLI |
