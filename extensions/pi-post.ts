@@ -5,7 +5,7 @@
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import { Text } from "@earendil-works/pi-tui";
 import { Type } from "typebox";
-import type { FSWatcher } from "node:fs";
+import { readFileSync, type FSWatcher } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 import { canonicalPath, sessionAddress } from "../src/address.ts";
@@ -50,6 +50,56 @@ export default function (pi: ExtensionAPI) {
   let watchers: FSWatcher[] = [];
   let heartbeat: ReturnType<typeof setInterval> | undefined;
   let draining = false;
+  let waitingForPrintPrompt = false;
+  const pending = new Map<string, { id: string; content: string }>();
+  let receiptTimer: ReturnType<typeof setInterval> | undefined;
+
+  // message_end fires before pi persists the message. Confirm the actual
+  // session file instead; an in-memory entry alone may never be written.
+  function reconcile(ctx: ExtensionContext) {
+    if (!pending.size) return;
+    const sessionFile = ctx.sessionManager.getSessionFile();
+    if (!sessionFile) return;
+    const entries = ctx.sessionManager.getEntries();
+    const candidates = [...pending].filter(([, expected]) => entries.some((entry) =>
+      entry.type === "custom_message" && entry.customType === "pi-post" &&
+      (entry.details as { message?: { id?: string } } | undefined)?.message?.id === expected.id &&
+      entry.content === expected.content,
+    ));
+    if (!candidates.length) return;
+    try {
+      const durable = new Set<string>();
+      for (const line of readFileSync(sessionFile, "utf8").split("\n")) {
+        if (!line) continue;
+        let entry: any;
+        try { entry = JSON.parse(line); } catch { continue; }
+        if (entry.type !== "custom_message" || entry.customType !== "pi-post") continue;
+        for (const [, expected] of candidates) {
+          if (entry.details?.message?.id === expected.id && entry.content === expected.content) durable.add(expected.id);
+        }
+      }
+      for (const [path, expected] of candidates) {
+        if (durable.has(expected.id)) {
+          consume(path);
+          pending.delete(path);
+        }
+      }
+    } catch {
+      // A missing or unreadable session file is not a receipt.
+    }
+    if (!pending.size && receiptTimer) {
+      clearInterval(receiptTimer);
+      receiptTimer = undefined;
+    }
+  }
+
+  function track(ctx: ExtensionContext, path: string, id: string, content: string) {
+    pending.set(path, { id, content });
+    if (!receiptTimer) {
+      receiptTimer = setInterval(() => reconcile(ctx), 250);
+      receiptTimer.unref?.();
+    }
+  }
 
   function senderFrom(ctx: ExtensionContext) {
     return {
@@ -60,38 +110,34 @@ export default function (pi: ExtensionAPI) {
     };
   }
 
-  async function deliver(ctx: ExtensionContext, message: Message, deliverAs: "steer" | "nextTurn") {
+  async function deliver(ctx: ExtensionContext, message: Message, path: string, deliverAs: "steer" | "nextTurn") {
     const mode = inboundMode();
-    if (mode === "refuse") return;
-    if (guard.check(message) !== "deliver") return;
+    if (mode === "refuse") return false;
+    if (guard.check(message) !== "deliver") return false;
     if (mode === "ask" && ctx.hasUI) {
       const preview = message.body.length > 200 ? `${message.body.slice(0, 200)}…` : message.body;
       const ok = await ctx.ui.confirm(`Message from ${message.from.name}`, preview);
-      if (!ok) return;
+      if (!ok) return false;
     }
+    const content = formatDelivery(message, { parent });
+    track(ctx, path, message.id, content);
     pi.sendMessage(
-      {
-        customType: "pi-post",
-        content: formatDelivery(message, { parent }),
-        display: true,
-        details: { message },
-      },
+      { customType: "pi-post", content, display: true, details: { message } },
       { deliverAs, triggerTurn: deliverAs === "steer" },
     );
+    return true;
   }
 
   async function drainAll(ctx: ExtensionContext, deliverAs: "steer" | "nextTurn") {
     if (draining || !selfAddress) return;
     draining = true;
     try {
+      reconcile(ctx);
       for (const { message, path } of claim(root, selfAddress)) {
-        // Disk-then-context ordering: the file is consumed only after the
-        // message has been disposed — entered context, or deliberately
-        // dropped by mode/guard/decline. A crash mid-loop redelivers on the
-        // next start rather than losing mail. Receivers must handle duplicate
-        // requests safely, including requests from their summoner.
-        await deliver(ctx, message, deliverAs);
-        consume(path);
+        // Do not enqueue the same file again when the watcher fires while pi
+        // still has its message in memory.
+        if (pending.has(path)) continue;
+        if (!(await deliver(ctx, message, path, deliverAs))) consume(path);
       }
     } finally {
       draining = false;
@@ -129,14 +175,14 @@ export default function (pi: ExtensionAPI) {
     sweepRegistry(root);
     sweepInboxes(root);
 
-    // Wake-on-resume: mail queued while the session was closed starts its
-    // own turn, symmetric with wake-on-idle — a resumed worker that only
-    // ever receives peer messages must not strand its mail waiting for a
-    // prompt that never comes. PI_POST_RESUME=stage restores the old
-    // wait-for-first-prompt staging (resume-to-browse without a turn).
-    await drainAll(ctx, resumeMode() === "stage" ? "nextTurn" : "steer");
+    // Print and JSON modes submit their prompt after session_start. Waking
+    // here would make that prompt collide with the already-running agent.
+    // Pi does not expose whether a startup prompt is present.
+    waitingForPrintPrompt = ctx.mode === "print" || ctx.mode === "json";
+    const stage = resumeMode() === "stage" || waitingForPrintPrompt;
+    await drainAll(ctx, stage ? "nextTurn" : "steer");
 
-    const onMessage = () => void drainAll(ctx, "steer");
+    const onMessage = () => void drainAll(ctx, waitingForPrintPrompt ? "nextTurn" : "steer");
     watchers = [watchInbox(root, selfAddress, onMessage)];
     heartbeat = setInterval(() => selfAddress && touchRecord(root, selfAddress), HEARTBEAT_MS);
     heartbeat.unref?.();
@@ -149,7 +195,15 @@ export default function (pi: ExtensionAPI) {
     if (record) writeRecord(root, { ...record, name: selfName, lastSeen: Date.now() });
   });
 
-  pi.on("session_shutdown", async () => {
+  pi.on("before_agent_start", async () => { waitingForPrintPrompt = false; });
+  pi.on("message_end", async (_event, ctx) => { reconcile(ctx); });
+  pi.on("agent_settled", async (_event, ctx) => { reconcile(ctx); });
+
+  pi.on("session_shutdown", async (_event, ctx) => {
+    if (ctx) reconcile(ctx);
+    if (receiptTimer) clearInterval(receiptTimer);
+    receiptTimer = undefined;
+    pending.clear();
     for (const watcher of watchers) watcher.close();
     watchers = [];
     if (heartbeat) clearInterval(heartbeat);
