@@ -84,12 +84,12 @@ Nothing to enable; every session registers itself on startup. Once a session has
 | Surface | Effect |
 |---|---|
 | `send_message` (tool) | Send text to one or more sessions (name, path, address, or session id); reports **delivered** or **queued** per target |
-| `list_sessions` (tool) | Known sessions, live first with ages, queued message counts, resume handles; stale offline rows collapse unless `all` |
+| `list_sessions` (tool) | Known sessions, live first with ages, queued message counts, parent addresses, resume handles; stale offline rows collapse unless `all` |
 | `/inbox` | Peek at this session's queued messages without consuming them |
 | `/sessions` | The `list_sessions` listing, without spending a model turn |
 | `pi-post send` (CLI) | Send from any process: `--to` (repeatable), `--body`/stdin, `--from`, `--reply-to` |
 | `pi-post resolve <handle>` (CLI) | One session's full record: name, address, session id, presence, cwd, resume command |
-| `pi-post list [--all]` / `peek` / `whoami` (CLI) | Inspect the registry, a mailbox, or your own address |
+| `pi-post list [--all]` / `peek` / `whoami` (CLI) | Inspect the registry (including parent addresses), a mailbox, or your own address |
 
 Ask in words; the model picks the tool.
 

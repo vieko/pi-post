@@ -6,7 +6,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { canonicalPath, sessionAddress } from "../src/address.ts";
-import { drain } from "../src/mailbox.ts";
+import { deposit, drain } from "../src/mailbox.ts";
+import { createMessage } from "../src/message.ts";
+import { formatListing } from "../src/format.ts";
 import { writeRecord, type SessionRecord } from "../src/registry.ts";
 
 const CLI = fileURLToPath(new URL("../bin/pi-post.mjs", import.meta.url));
@@ -178,6 +180,30 @@ test("list is live-first with ages; --all reveals collapsed stale sessions", () 
 
   const full = run(root, ["list", "--all"]);
   assert.match(full.stdout, /stale .*\(offline 3d ago\)/);
+});
+
+test("CLI list matches session rows for valid, missing and malformed parents", () => {
+  const root = newRoot();
+  const now = Date.now();
+  const common = { v: 1 as const, sessionId: "sid", cwd: "/x", startedAt: 0, pid: process.pid };
+  const records: SessionRecord[] = [
+    { ...common, address: "s-aaaaaaaaaaaa", name: "worker", parent: "s-eeeeeeeeeeee", lastSeen: now },
+    { ...common, address: "s-bbbbbbbbbbbb", name: "unbound", lastSeen: now - 1 },
+    { ...common, address: "s-cccccccccccc", name: "bad", parent: "s-eeeeeeeeeeee\n", lastSeen: now - 2 },
+    { ...common, address: "s-dddddddddddd", name: "nonstring", parent: ["s-eeeeeeeeeeee"] as unknown as string, lastSeen: now - 3 },
+  ];
+  for (const record of records) writeRecord(root, record);
+  for (let i = 0; i < 2; i++) {
+    deposit(root, records[0]!.address, createMessage({ from: { kind: "process", name: "test" }, body: "hi" }));
+  }
+  const result = run(root, ["list"]);
+  assert.equal(result.status, 0, result.stderr);
+  const lines = result.stdout.trimEnd().split("\n");
+  assert.deepEqual(lines, formatListing(root, records).split("\n").slice(0, records.length));
+  assert.equal(lines[0], "worker — s-aaaaaaaaaaaa (live, 2 queued, parent s-eeeeeeeeeeee) /x [pi --session sid]");
+  assert.equal(lines[1], "unbound — s-bbbbbbbbbbbb (live) /x [pi --session sid]");
+  assert.equal(lines[2], "bad — s-cccccccccccc (live) /x [pi --session sid]");
+  assert.equal(lines[3], "nonstring — s-dddddddddddd (live) /x [pi --session sid]");
 });
 
 test("repeated --to fans one body out to each target with distinct message ids", () => {

@@ -284,8 +284,10 @@ function list(args) {
     }
     const state = live ? "live" : `offline ${relativeAge(record.lastSeen, now)}`;
     const queuedNote = queued > 0 ? `, ${queued} queued` : "";
+    const parentNote = typeof record.parent === "string" && ADDRESS_RE.test(record.parent)
+      ? `, parent ${record.parent}` : "";
     console.log(
-      `${record.name} — ${record.address} (${state}${queuedNote}) ${record.cwd} ` +
+      `${record.name} — ${record.address} (${state}${queuedNote}${parentNote}) ${record.cwd} ` +
         `[pi --session ${resumeHandle(record.sessionId)}]`,
     );
   }

@@ -46,9 +46,10 @@ cwd, resume command. The address stays a hash on purpose: deriving it
 from the session id would couple the wire contract to pi's id format
 and, with UUIDv7, collide on prefixes for sessions started close
 together. Surfacing the mapping the registry already stores gives the
-same ergonomics without touching the contract. Printing a resume handle
-is directory information, not lifecycle management — pi-post still
-never spawns or resumes anything itself.
+same ergonomics without touching the contract. Listings also show a session's
+valid parent address when present, without requiring a parent registry record.
+Printing a resume handle is directory information, not lifecycle management —
+pi-post still never spawns or resumes anything itself.
 
 v0.2.0 had a second kind — standing addresses, one per directory, so
 messages could wait for sessions that did not exist yet. Removed in v0.3.0:

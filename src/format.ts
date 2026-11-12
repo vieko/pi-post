@@ -1,3 +1,4 @@
+import { isAddress } from "./address.ts";
 import type { Message } from "./message.ts";
 import { queuedCount } from "./mailbox.ts";
 import { presence, type SessionRecord } from "./registry.ts";
@@ -84,8 +85,10 @@ export function formatListing(
     }
     const state = live ? "live" : `offline ${relativeAge(record.lastSeen, now)}`;
     const queuedNote = queued > 0 ? `, ${queued} queued` : "";
+    const parentNote = typeof record.parent === "string" && isAddress(record.parent)
+      ? `, parent ${record.parent}` : "";
     lines.push(
-      `${record.name} — ${record.address} (${state}${queuedNote})${self ? " [self]" : ""} ${record.cwd} ` +
+      `${record.name} — ${record.address} (${state}${queuedNote}${parentNote})${self ? " [self]" : ""} ${record.cwd} ` +
         `[pi --session ${resumeHandle(record.sessionId)}]`,
     );
   }
