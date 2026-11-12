@@ -114,6 +114,33 @@ test("every listed session carries its resume handle beside the address", () => 
   assert.match(listing, /gtm — s-aaaaaaaaaaaa \(offline just now\) \/dev\/gtm \[pi --session 019fd2b2-93d5-7447\]/);
 });
 
+test("listing shows a valid parent after the queued count, including for self", () => {
+  const root = newRoot();
+  const child = record({ pid: process.pid, parent: "s-bbbbbbbbbbbb" });
+  for (let i = 0; i < 2; i++) {
+    deposit(root, child.address, createMessage({ from: { kind: "process", name: "test" }, body: "hi" }));
+  }
+  assert.equal(formatListing(root, [child], child.address).split("\n")[0],
+    "gtm — s-aaaaaaaaaaaa (live, 2 queued, parent s-bbbbbbbbbbbb) [self] /dev/gtm [pi --session 019fd2b2-93d5-7447]");
+  assert.equal(formatListing(root, [child]).split("\n")[0],
+    "gtm — s-aaaaaaaaaaaa (live, 2 queued, parent s-bbbbbbbbbbbb) /dev/gtm [pi --session 019fd2b2-93d5-7447]");
+});
+
+test("a listing row without a parent remains unchanged", () => {
+  const child = record({ pid: process.pid });
+  assert.equal(formatListing(newRoot(), [child]).split("\n")[0],
+    "gtm — s-aaaaaaaaaaaa (live) /dev/gtm [pi --session 019fd2b2-93d5-7447]");
+});
+
+test("a listing never prints a malformed parent from a registry record", () => {
+  const root = newRoot();
+  for (const parent of ["s-bad", "S-BBBBBBBBBBBB", "s-bbbbbbbbbbbb\n", "", null, ["s-bbbbbbbbbbbb"], {}]) {
+    const child = record({ pid: process.pid, parent: parent as string });
+    assert.equal(formatListing(root, [child]).split("\n")[0],
+      "gtm — s-aaaaaaaaaaaa (live) /dev/gtm [pi --session 019fd2b2-93d5-7447]");
+  }
+});
+
 test("relative age reads in minutes, hours, then days", () => {
   const now = Date.now();
   assert.equal(relativeAge(now, now), "just now");

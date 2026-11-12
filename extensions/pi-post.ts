@@ -239,7 +239,7 @@ export default function (pi: ExtensionAPI) {
     label: "List Sessions",
     description:
       "List pi sessions known to pi-post: their names, addresses, presence (live/offline, " +
-      "with age), queued message counts, and each session's resume handle ([pi --session …], run " +
+      "with age), queued message counts, parent addresses, and each session's resume handle ([pi --session …], run " +
       "from the listed directory). Live sessions come first; offline sessions unseen for over " +
       "a day are collapsed into a count unless all is set. Any directory path is also a valid " +
       "send_message target even if nothing is listed for it.",
