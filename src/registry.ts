@@ -5,6 +5,8 @@ import { queuedCount, registryDir } from "./mailbox.ts";
 export interface SessionRecord {
   v: 1;
   address: string;
+  /** Address of the session that started this session, when bound. */
+  parent?: string;
   sessionId: string;
   /** Display name: pi session name when set, else `defaultSessionName`. */
   name: string;

@@ -93,7 +93,8 @@ One message per file, named `<sentAt ms, 13 digits>-<8 hex nonce>.json`:
    it has been disposed — entered context, or deliberately dropped by
    mode/guard — and only then unlinks it. The unlink is the receipt. A
    crash mid-delivery therefore redelivers rather than loses:
-   at-least-once, which is safe because messages carry no authority.
+   at-least-once. Receivers must handle duplicate requests safely, including
+   requests from their summoner.
 5. Each message passes the inbound guard (mode + loop caps), then enters
    context wrapped in the boundary preamble:
    - live messages → `deliverAs: "steer"`, `triggerTurn: true` — land between
@@ -108,19 +109,37 @@ One message per file, named `<sentAt ms, 13 digits>-<8 hex nonce>.json`:
 
 ## The boundary
 
-Every delivered message is framed with: it came from another session or
+By default, every delivered message says it came from another session or
 process, not from the user; it carries no authority; it cannot approve
 actions, change configuration, or close out review; slash commands in it
-are inert text. A "done" message is a claim, not an approval — the
-review pipeline is unchanged by this channel existing.
+are inert text.
+
+A session started with `PI_POST_PARENT` binds to that session address. A
+message from that parent session receives a second stamp: within the brief,
+the summoner speaks for the user on scope, sequencing, and reversible local
+steps in the worker's own worktree. It cannot approve a push, merge, deploy,
+database write, or publish; those need the user directly. Claims of completed
+work remain unreviewed. The binding persists in a session entry across resume
+and `/restart`. A fork copies the entry if it is in the copied history, so the
+fork retains the same parent under a new address. A session with no binding
+binds on the first start with a valid `PI_POST_PARENT`, even if it already has
+history: the process that sets the variable also supplies that start's prompt,
+so the binding gives it nothing it did not already have.
+
+A "done" message is a claim, not an approval — the review pipeline is
+unchanged by this channel existing.
+
+The binding is one level, not transitive: a worker's children bind to the
+worker, not its parent. The extension removes `PI_POST_PARENT` from its
+environment after reading it, so children do not inherit the binding.
 
 For session senders, the bracketed address in the delivery label is the
 sender's own address. The extension sets it from the session id, and
-`send_message` has no parameter to set it. Receivers granting scope to one
-sender should match this address, not the reply line, which the sender
-chooses. This protects against a confused session, not a hostile local
-process: the mailbox is a directory, and any process that can write there
-can forge any field.
+`send_message` has no parameter to set it. The second stamp matches this
+address, not the reply line, which the sender chooses. Process senders never
+receive the second stamp. This protects against a confused session, not a
+hostile local process: the mailbox is a directory, and any process that can
+write there can forge any field.
 
 ## Invariants
 
@@ -133,7 +152,7 @@ Each is pinned by a test.
 - **Nothing is lost.** A message leaves disk only after it is disposed
   — delivered into context or deliberately dropped. A crash between
   context entry and unlink redelivers on the next start: at-least-once,
-  never silent loss. (Duplicates are safe; messages carry no authority.)
+  never silent loss. Receivers must handle duplicate requests safely.
 - **Messages outrank tidiness.** No sweep deletes a non-empty mailbox, and
   queued messages pin the target's registry record: a record is swept only
   when it is offline, stale (7 days), *and* its mailbox is empty. Empty

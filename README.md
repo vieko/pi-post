@@ -143,6 +143,7 @@ sessions can read state; only one can consume a message.
 
 | Variable | Default | Meaning |
 | --- | --- | --- |
+| `PI_POST_PARENT` | — | Session address of the summoner that started this session; persisted on first binding and not inherited by children |
 | `PI_POST_INBOUND` | `accept` | `accept` delivers, `ask` prompts per message (falls back to accept headless), `refuse` drops |
 | `PI_POST_RESUME` | `wake` | `wake` starts the resumed session's first turn with its queued mail; `stage` holds it for the first user prompt |
 | `PI_POST_DIR` | `~/.pi/agent/post` | Where the registry and mailboxes live |
