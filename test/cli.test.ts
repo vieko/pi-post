@@ -92,7 +92,13 @@ test("stdin is the body when --body is absent", () => {
 
 test("an oversize body is refused with a nonzero exit", () => {
   const root = newRoot();
-  const result = run(root, ["send", "--to", "s-abcdefabcdef", "--body", "x".repeat(33 * 1024)]);
+  // Over stdin, not --body: some EDR tools (SentinelOne) SIGKILL `node <script>`
+  // when one argument is ~1 KB or more, so status would be null, not 1.
+  const result = spawnSync(process.execPath, [CLI, "send", "--to", "s-abcdefabcdef"], {
+    env: { ...process.env, PI_POST_DIR: root, PI_POST_REPLY_TO: "", PI_SESSION_ID: "" },
+    input: "x".repeat(33 * 1024),
+    encoding: "utf8",
+  });
   assert.equal(result.status, 1);
   assert.match(result.stderr, /cap/);
 });
