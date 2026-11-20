@@ -88,7 +88,7 @@ Nothing to enable; every session registers itself on startup. Once a session has
 | `list_sessions` (tool) | Known sessions, live first with ages, queued message counts, parent addresses, resume handles; stale offline rows collapse unless `all` |
 | `/inbox` | Peek at this session's queued messages without consuming them |
 | `/sessions` | The `list_sessions` listing, without spending a model turn |
-| `pi-post send` (CLI) | Send from any process: `--to` (repeatable), `--body`/stdin, `--from`, `--reply-to` |
+| `pi-post send` (CLI) | Send from any process: `--to` (repeatable), `--body`/stdin, `--from`, `--reply-to`. Pipe long bodies over stdin: some EDR tools kill a process that has an argument of ~1 KB or more |
 | `pi-post resolve <handle>` (CLI) | One session's full record: name, address, session id, presence, cwd, resume command |
 | `pi-post list [--all]` / `peek` / `whoami` (CLI) | Inspect the registry (including parent addresses), a mailbox, or your own address |
 
